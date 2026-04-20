@@ -20,7 +20,7 @@
         
         /* تصميم جدول الإدارة */
         .admin-table-wrapper { max-height: 550px; overflow: auto; margin-top: 15px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        table { width: 100%; min-width: 1000px; color: #222; border-collapse: collapse; font-size: 0.9rem; }
+        table { width: 100%; min-width: 1100px; color: #222; border-collapse: collapse; font-size: 0.85rem; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; word-break: break-word; }
         th { background: #f2f2f2; position: sticky; top: 0; z-index: 10; color: #1b5e20; font-weight: bold; border-bottom: 2px solid #1b5e20; }
         tr:nth-child(even) { background-color: #f9f9f9; }
@@ -42,7 +42,7 @@
         <button onclick="openRegister('كشافة')">كشافة</button>
         <button onclick="openRegister('مرشدات')">مرشدات</button>
         <button onclick="openRegister('جوالة')">جوالة</button>
-        <button class="dev-link" onclick="showView('screenLogin')">دخول الإدارة</button>
+        <button onclick="openRegister('جوالات')">جوالات</button> <button class="dev-link" onclick="showView('screenLogin')">دخول الإدارة</button>
     </div>
 
     <div id="screenLogin" class="screen">
@@ -105,7 +105,6 @@
         showView('screenReg');
     }
 
-    // وظيفة الإرسال - تجميع كل المدخلات
     function finishReg() {
         const payload = {
             name: document.getElementById('regName').value.trim(),
@@ -123,16 +122,10 @@
             return; 
         }
 
-        document.getElementById('saveBtn').innerText = "جاري الحفظ الآن...";
-        document.getElementById('saveBtn').disabled = true;
-
+        document.getElementById('saveBtn').innerText = "جاري الحفظ...";
         database.ref('scouts').push(payload).then(() => {
             showView('screenSuccess');
-        }).catch(err => {
-            alert("حدث خطأ في الاتصال: " + err.message);
-            document.getElementById('saveBtn').innerText = "إرسال البيانات للسحابة";
-            document.getElementById('saveBtn').disabled = false;
-        });
+        }).catch(err => alert("حدث خطأ: " + err.message));
     }
 
     function checkDev() {
@@ -146,14 +139,14 @@
         }
     }
 
-    // وظيفة العرض - تضمن ظهور أي شيء مكتوب ومنع الـ undefined
+    // وظيفة العرض الشاملة لمنع undefined
     function loadCloudData() {
         database.ref('scouts').on('value', (snapshot) => {
             const data = snapshot.val();
             const tableContainer = document.getElementById('adminTable');
             
             if(!data) {
-                tableContainer.innerHTML = "<p style='color:black; padding:20px; font-weight:bold;'>لا توجد بيانات مسجلة في السحابة حالياً.</p>";
+                tableContainer.innerHTML = "<p style='color:black; padding:20px;'>لا توجد بيانات حالياً.</p>";
                 return;
             }
 
@@ -175,25 +168,19 @@
             for(let key in data) {
                 const scout = data[key];
                 
-                // التأكد من جلب القيم أو وضع شرطة إذا كانت فارغة
-                const name = scout.name || scout.regName || "-";
-                const nId  = scout.nationalId || scout.regNationalId || "-";
-                const stg  = scout.stage || "-";
-                const ph   = scout.phone || scout.regPhone || "-";
-                const pPh  = scout.parentPhone || scout.regParentPhone || "-";
-                const addr = scout.address || scout.regAddress || "-";
-                const sch  = scout.schoolYear || scout.regSchool || "-";
+                // البحث عن القيمة بأي مسمى محتمل لضمان الظهور
+                const val = (k) => scout[k] || "-";
 
                 html += `<tr>
-                    <td style="font-weight:bold;">${name}</td>
-                    <td>${nId}</td>
-                    <td><span style="color:#1b5e20; font-weight:bold;">${stg}</span></td>
-                    <td>${ph}</td>
-                    <td>${pPh}</td>
-                    <td>${addr}</td>
-                    <td>${sch}</td>
+                    <td style="font-weight:bold;">${val('name')}</td>
+                    <td>${val('nationalId')}</td>
+                    <td style="color:#1b5e20; font-weight:bold;">${val('stage')}</td>
+                    <td>${val('phone')}</td>
+                    <td>${val('parentPhone')}</td>
+                    <td>${val('address')}</td>
+                    <td>${val('schoolYear')}</td>
                     <td>
-                        <button class="delete-btn" onclick="deleteEntry('${key}', '${name.replace(/'/g, "\\'")}')">حذف</button>
+                        <button class="delete-btn" onclick="deleteEntry('${key}', '${val('name').replace(/'/g, "\\'")}')">حذف</button>
                     </td>
                 </tr>`;
             }
@@ -202,14 +189,9 @@
         });
     }
 
-    // وظيفة الحذف
     function deleteEntry(id, name) {
-        if(confirm(`هل أنت متأكد من حذف بيانات المشترك: ${name}؟`)) {
-            database.ref('scouts/' + id).remove()
-            .then(() => {
-                // سيتم تحديث الجدول تلقائياً بسبب .on('value')
-            })
-            .catch(err => alert("عذراً، فشل الحذف: " + err.message));
+        if(confirm(`حذف بيانات: ${name}؟`)) {
+            database.ref('scouts/' + id).remove();
         }
     }
 </script>
