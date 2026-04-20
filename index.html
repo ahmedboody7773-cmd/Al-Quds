@@ -3,32 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Al Quds Scout - لوحة التحكم</title>
+    <title>Al Quds Scout - نظام مستقر</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1b5e20; color: white; margin: 0; padding: 10px; min-height: 100vh; }
-        .container { background-color: rgba(0, 0, 0, 0.9); padding: 20px; border-radius: 15px; text-align: center; width: calc(100% - 40px); max-width: 1300px; margin: auto; border: 1px solid rgba(255,255,255,0.1); }
+        .container { background-color: rgba(0, 0, 0, 0.9); padding: 15px; border-radius: 15px; text-align: center; width: 100%; max-width: 1300px; margin: auto; box-sizing: border-box; }
         .screen { display: none; }
         .active { display: block; }
-        button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; padding: 12px; margin: 5px 0; width: 100%; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; box-sizing: border-box; }
+        button { cursor: pointer; border: none; border-radius: 8px; font-weight: bold; padding: 12px; margin: 5px 0; width: 100%; transition: 0.2s; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: none; box-sizing: border-box; color: black; }
         
-        /* تصميم الجدول الاحترافي */
-        .table-container { width: 100%; overflow-x: auto; background: white; border-radius: 10px; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; color: #333; min-width: 1100px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
-        th { background: #eee; color: #1b5e20; position: sticky; top: 0; }
+        .table-container { width: 100%; overflow-x: auto; background: white; border-radius: 10px; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; color: #333; min-width: 1000px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        th { background: #f4f4f4; color: #1b5e20; position: sticky; top: 0; }
         
-        /* زر الحذف المختفي */
-        .del-col { display: none; }
-        .del-btn { background: #d32f2f; color: white; padding: 5px; font-size: 0.8rem; width: auto; }
+        .del-col { display: none; width: 70px; }
+        .del-btn { background: #d32f2f; color: white; padding: 5px; width: 100%; font-size: 0.8rem; }
 
         .admin-footer { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         #toggleDel { background: #ffd700; color: black; max-width: 300px; }
-        #exitBtn { background: #555; color: white; max-width: 200px; }
+        #exitBtn { background: #444; color: white; max-width: 200px; }
     </style>
 </head>
 <body>
@@ -46,20 +44,20 @@
     </div>
 
     <div id="screenAdmin" class="screen">
-        <h2 style="color:#ffd700;">سجل البيانات السحابي</h2>
+        <h2 style="color:#ffd700;">لوحة البيانات</h2>
         <div class="table-container" id="dataTable">جاري التحميل...</div>
         <div class="admin-footer">
-            <button id="toggleDel" onclick="toggleDel()">تفعيل خاصية الحذف 🗑️</button>
+            <button id="toggleDel" onclick="toggleDel()">تفعيل الحذف 🗑️</button>
             <button id="exitBtn" onclick="location.reload()">خروج</button>
         </div>
     </div>
 
     <div id="screenLogin" class="screen">
-        <h3>أدخل بيانات الإدارة</h3>
+        <h3>تسجيل دخول</h3>
         <input type="text" id="u" placeholder="المستخدم">
         <input type="password" id="p" placeholder="الرمز">
         <button onclick="login()" style="background:#ffd700;">دخول</button>
-        <button onclick="showV('screenHome')" style="background:none; color:white;">إلغاء</button>
+        <button onclick="showV('screenHome')" style="background:none; color:white;">رجوع</button>
     </div>
 
     <div id="screenForm" class="screen">
@@ -71,7 +69,7 @@
         <input type="text" id="ad" placeholder="العنوان">
         <input type="text" id="sy" placeholder="السنة الدراسية">
         <input type="hidden" id="stg">
-        <button onclick="sendData()" style="background:#ffd700;">إرسال للسيرفر</button>
+        <button onclick="sendData()" style="background:#ffd700;">إرسال</button>
         <button onclick="showV('screenHome')" style="background:none; color:white;">رجوع</button>
     </div>
 </div>
@@ -113,7 +111,7 @@
             stage: document.getElementById('stg').value,
             time: new Date().toLocaleString('ar-EG')
         };
-        db.ref('scouts').push(obj).then(() => { alert("تم الحفظ"); location.reload(); });
+        db.ref('scouts').push(obj).then(() => { alert("تم"); location.reload(); });
     }
 
     function login(){
@@ -131,22 +129,25 @@
                 h += <tr><td>${val[k].name}</td><td>${val[k].stage}</td><td>${val[k].p1}</td><td>${val[k].p2}</td><td>${val[k].p3}</td><td>${val[k].addr}</td><td>${val[k].year}</td><td class="del-col"><button class="del-btn" onclick="del('${k}')">حذف</button></td></tr>;
             }
             document.getElementById('dataTable').innerHTML = h + "</table>";
-            if(canDel) updateDel();
+            updateDel(); // تحديث الحالة فوراً بعد رسم الجدول
         });
     }
 
     function toggleDel(){
         canDel = !canDel;
-        document.getElementById('toggleDel').innerText = canDel ? "إغلاق الحذف 🔓" : "تفعيل خاصية الحذف 🗑️";
+        document.getElementById('toggleDel').innerText = canDel ? "إيقاف الحذف 🔓" : "تفعيل الحذف 🗑️";
         updateDel();
     }
 
     function updateDel(){
-        document.querySelectorAll('.del-col').forEach(c => c.style.display = canDel ? "table-cell" : "none");
+        const cols = document.querySelectorAll('.del-col');
+        cols.forEach(c => c.style.display = canDel ? "table-cell" : "none");
     }
 
     function del(id){
-        if(confirm("مسح؟")){ db.ref('scouts/'+id).remove(); }
+        if(confirm("مسح السجل؟")){
+            db.ref('scouts/' + id).remove();
+        }
     }
 </script>
 </body>
