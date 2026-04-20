@@ -10,7 +10,7 @@
 
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1b5e20; color: white; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 0; }
-        .container { background-color: rgba(0, 0, 0, 0.85); padding: 25px; border-radius: 15px; text-align: center; width: 98%; max-width: 1100px; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.1); }
+        .container { background-color: rgba(0, 0, 0, 0.85); padding: 25px; border-radius: 15px; text-align: center; width: 98%; max-width: 1150px; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.1); }
         .screen { display: none; }
         .active { display: block; }
         button { display: block; width: 100%; padding: 12px; margin: 10px 0; border: none; border-radius: 8px; background-color: #ffffff; color: #1b5e20; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
@@ -18,14 +18,15 @@
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; color: black; font-size: 1rem; }
         .dev-link { background: none; color: #81c784; text-decoration: underline; font-size: 0.85rem; margin-top: 20px; cursor: pointer; border: none; }
         
-        /* تحسين الجدول ليشمل العمود الجديد */
-        .admin-table-wrapper { max-height: 500px; overflow: auto; margin-top: 15px; background: white; border-radius: 8px; }
-        table { width: 100%; min-width: 1000px; color: #222; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { border: 1px solid #ddd; padding: 12px 5px; text-align: center; }
-        th { background: #eee; position: sticky; top: 0; z-index: 10; color: #1b5e20; font-weight: bold; }
-        tr:hover { background-color: #f9f9f9; }
+        /* تصميم جدول الإدارة */
+        .admin-table-wrapper { max-height: 550px; overflow: auto; margin-top: 15px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        table { width: 100%; min-width: 1000px; color: #222; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; word-break: break-word; }
+        th { background: #f2f2f2; position: sticky; top: 0; z-index: 10; color: #1b5e20; font-weight: bold; border-bottom: 2px solid #1b5e20; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
         
-        .delete-btn { background-color: #ff5252 !important; color: white !important; width: auto !important; display: inline-block; padding: 5px 12px; margin: 0; font-size: 0.8rem; border-radius: 5px; }
+        .delete-btn { background-color: #ff5252 !important; color: white !important; width: auto !important; display: inline-block; padding: 6px 15px; margin: 0; font-size: 0.8rem; border-radius: 5px; }
         .delete-btn:hover { background-color: #b71c1c !important; }
     </style>
 </head>
@@ -54,7 +55,7 @@
 
     <div id="screenAdmin" class="screen">
         <h3 style="color:#ffd700">إدارة المشتركين السحابية</h3>
-        <div class="admin-table-wrapper" id="adminTable">جاري جلب البيانات...</div>
+        <div class="admin-table-wrapper" id="adminTable">جاري تحميل البيانات...</div>
         <button onclick="showView('screen1')" style="background:#333; color:white; margin-top:15px">خروج</button>
     </div>
 
@@ -104,24 +105,34 @@
         showView('screenReg');
     }
 
+    // وظيفة الإرسال - تجميع كل المدخلات
     function finishReg() {
-        const data = {
-            name: document.getElementById('regName').value,
-            nationalId: document.getElementById('regNationalId').value,
-            phone: document.getElementById('regPhone').value,
-            parentPhone: document.getElementById('regParentPhone').value,
-            address: document.getElementById('regAddress').value,
-            schoolYear: document.getElementById('regSchool').value,
+        const payload = {
+            name: document.getElementById('regName').value.trim(),
+            nationalId: document.getElementById('regNationalId').value.trim(),
+            phone: document.getElementById('regPhone').value.trim(),
+            parentPhone: document.getElementById('regParentPhone').value.trim(),
+            address: document.getElementById('regAddress').value.trim(),
+            schoolYear: document.getElementById('regSchool').value.trim(),
             stage: document.getElementById('selectedStage').value,
-            regTime: new Date().toLocaleString('ar-EG')
+            timestamp: new Date().toLocaleString('ar-EG')
         };
 
-        if(!data.name || !data.phone) { alert("أكمل الاسم ورقم الهاتف على الأقل"); return; }
+        if(!payload.name || !payload.phone) { 
+            alert("يرجى إدخال الاسم ورقم الهاتف على الأقل"); 
+            return; 
+        }
 
-        document.getElementById('saveBtn').innerText = "جاري الحفظ...";
-        database.ref('scouts').push(data).then(() => {
+        document.getElementById('saveBtn').innerText = "جاري الحفظ الآن...";
+        document.getElementById('saveBtn').disabled = true;
+
+        database.ref('scouts').push(payload).then(() => {
             showView('screenSuccess');
-        }).catch(err => alert("خطأ: " + err.message));
+        }).catch(err => {
+            alert("حدث خطأ في الاتصال: " + err.message);
+            document.getElementById('saveBtn').innerText = "إرسال البيانات للسحابة";
+            document.getElementById('saveBtn').disabled = false;
+        });
     }
 
     function checkDev() {
@@ -131,17 +142,18 @@
             loadCloudData();
             showView('screenAdmin');
         } else {
-            alert("بيانات الدخول غير صحيحة");
+            alert("بيانات الدخول خاطئة");
         }
     }
 
+    // وظيفة العرض - تضمن ظهور أي شيء مكتوب ومنع الـ undefined
     function loadCloudData() {
         database.ref('scouts').on('value', (snapshot) => {
             const data = snapshot.val();
-            const container = document.getElementById('adminTable');
+            const tableContainer = document.getElementById('adminTable');
             
             if(!data) {
-                container.innerHTML = "<p style='color:black; padding:20px;'>القائمة فارغة حالياً.</p>";
+                tableContainer.innerHTML = "<p style='color:black; padding:20px; font-weight:bold;'>لا توجد بيانات مسجلة في السحابة حالياً.</p>";
                 return;
             }
 
@@ -160,31 +172,44 @@
                 </thead>
                 <tbody>`;
 
-            for(let id in data) {
-                const item = data[id];
+            for(let key in data) {
+                const scout = data[key];
+                
+                // التأكد من جلب القيم أو وضع شرطة إذا كانت فارغة
+                const name = scout.name || scout.regName || "-";
+                const nId  = scout.nationalId || scout.regNationalId || "-";
+                const stg  = scout.stage || "-";
+                const ph   = scout.phone || scout.regPhone || "-";
+                const pPh  = scout.parentPhone || scout.regParentPhone || "-";
+                const addr = scout.address || scout.regAddress || "-";
+                const sch  = scout.schoolYear || scout.regSchool || "-";
+
                 html += `<tr>
-                    <td>${item.name || '-'}</td>
-                    <td>${item.nationalId || '-'}</td>
-                    <td>${item.stage || '-'}</td>
-                    <td>${item.phone || '-'}</td>
-                    <td>${item.parentPhone || '-'}</td>
-                    <td>${item.address || '-'}</td>
-                    <td>${item.schoolYear || '-'}</td>
+                    <td style="font-weight:bold;">${name}</td>
+                    <td>${nId}</td>
+                    <td><span style="color:#1b5e20; font-weight:bold;">${stg}</span></td>
+                    <td>${ph}</td>
+                    <td>${pPh}</td>
+                    <td>${addr}</td>
+                    <td>${sch}</td>
                     <td>
-                        <button class="delete-btn" onclick="deleteUser('${id}', '${item.name}')">حذف</button>
+                        <button class="delete-btn" onclick="deleteEntry('${key}', '${name.replace(/'/g, "\\'")}')">حذف</button>
                     </td>
                 </tr>`;
             }
             html += "</tbody></table>";
-            container.innerHTML = html;
+            tableContainer.innerHTML = html;
         });
     }
 
-    function deleteUser(userId, userName) {
-        if(confirm(`هل أنت متأكد من حذف حساب: ${userName}؟`)) {
-            database.ref('scouts/' + userId).remove()
-            .then(() => alert("تم الحذف بنجاح"))
-            .catch(err => alert("فشل الحذف: " + err.message));
+    // وظيفة الحذف
+    function deleteEntry(id, name) {
+        if(confirm(`هل أنت متأكد من حذف بيانات المشترك: ${name}؟`)) {
+            database.ref('scouts/' + id).remove()
+            .then(() => {
+                // سيتم تحديث الجدول تلقائياً بسبب .on('value')
+            })
+            .catch(err => alert("عذراً، فشل الحذف: " + err.message));
         }
     }
 </script>
